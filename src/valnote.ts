@@ -59,7 +59,38 @@ function sourceLines(source: string): string[] {
 	return text.split('\n');
 }
 
-export function decorateValnoteCode(code: HTMLElement): void {
+export function decorateValnoteReading(root: ParentNode): Promise<void[]> | void {
+	const jobs: Promise<void>[] = [];
+	root.querySelectorAll('code.language-valnote, pre.language-valnote > code').forEach((code) => {
+		if (!code.instanceOf(HTMLElement) || code.dataset.valnoteReady === '1') return;
+		jobs.push(
+			whenHighlighted(code).then(() => {
+				if (code.isConnected) decorateValnoteCode(code);
+			}),
+		);
+	});
+	if (jobs.length > 0) return Promise.all(jobs);
+}
+
+function whenHighlighted(code: HTMLElement): Promise<void> {
+	if (code.hasClass('is-loaded')) return Promise.resolve();
+	return new Promise((resolve) => {
+		const win = code.win as Window & { MutationObserver: typeof MutationObserver };
+		const done = () => {
+			observer.disconnect();
+			win.clearTimeout(timer);
+			resolve();
+		};
+		const observer = new win.MutationObserver(() => {
+			if (code.hasClass('is-loaded')) done();
+		});
+		// ponytail: 1s cap if Prism never adds is-loaded. Drop the timer if reading view stops highlighting language-* blocks.
+		const timer = win.setTimeout(done, 1000);
+		observer.observe(code, { attributes: true, attributeFilter: ['class'] });
+	});
+}
+
+function decorateValnoteCode(code: HTMLElement): void {
 	if (code.dataset.valnoteReady === '1') return;
 	const source = code.textContent ?? '';
 	code.dataset.valnoteReady = '1';
