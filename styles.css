@@ -1,8 +1,37 @@
-/*
+.valnote-line {
+	font-family: var(--font-monospace);
+	white-space: pre-wrap;
+}
 
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
+.valnote-result-wrap {
+	display: inline;
+}
 
-If your plugin does not need CSS, delete this file.
+.valnote-result {
+	display: inline-block;
+	margin-left: 1em;
+	padding: 0 0.35em;
+	border-radius: 2px;
+	background: #48b57e;
+	color: #fff;
+	line-height: 1.4;
+	cursor: pointer;
+	user-select: none;
+	white-space: nowrap;
+	vertical-align: baseline;
+}
 
-*/
+.valnote-result-copied {
+	margin-left: 0.4em;
+	animation: valnote-copied 0.8s ease forwards;
+}
+
+@keyframes valnote-copied {
+	0%,
+	35% {
+		opacity: 1;
+	}
+	100% {
+		opacity: 0;
+	}
+}

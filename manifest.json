@@ -1,11 +1,10 @@
 {
-	"id": "sample-plugin",
-	"name": "Sample Plugin",
+	"id": "obsidian-valnote",
+	"name": "Valnote",
 	"version": "1.0.0",
 	"minAppVersion": "1.0.0",
-	"description": "Demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
+	"description": "在 valnote 代码块中计算表达式，并在表达式旁显示结果。",
+	"author": "pi-laoban",
+	"authorUrl": "https://github.com/pi-laoban",
 	"isDesktopOnly": false
 }
