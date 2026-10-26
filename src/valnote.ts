@@ -1,4 +1,4 @@
-import { RangeSetBuilder, type EditorState } from '@codemirror/state';
+import { RangeSetBuilder } from '@codemirror/state';
 import {
 	Decoration,
 	EditorView,
@@ -7,13 +7,7 @@ import {
 	type DecorationSet,
 	type ViewUpdate,
 } from '@codemirror/view';
-import { editorLivePreviewField } from 'obsidian';
-import {
-	evaluateLines,
-	valnoteSpans,
-	type LineSpan,
-	type LineValue,
-} from './valnote-eval';
+import { evaluateLines, valnoteSpans, type LineValue } from './valnote-eval';
 
 const COPIED_MS = 800;
 
@@ -65,25 +59,25 @@ function sourceLines(source: string): string[] {
 	return text.split('\n');
 }
 
-export function renderValnote(source: string, el: HTMLElement): void {
-	el.empty();
-	el.addClass('valnote-block');
+export function decorateValnoteCode(code: HTMLElement): void {
+	if (code.dataset.valnoteReady === '1') return;
+	const source = code.textContent ?? '';
+	code.dataset.valnoteReady = '1';
+	code.empty();
 	const lines = sourceLines(source);
 	const values = evaluateLines(lines);
 	for (let i = 0; i < lines.length; i++) {
-		const line = lines[i] ?? '';
-		const value = values[i] ?? null;
-		appendLine(el, line, value);
+		if (i > 0) code.appendText('\n');
+		appendLine(code, lines[i] ?? '', values[i] ?? null);
 	}
 }
 
 function appendLine(el: HTMLElement, line: string, value: LineValue | null): void {
-	const row = el.createDiv({ cls: 'valnote-line' });
 	const end = value?.exprEnd ?? line.length;
-	row.createSpan({ text: line.slice(0, end) });
-	if (value) row.appendChild(createResult(value.display, value.copy));
+	el.appendText(line.slice(0, end));
+	if (value) el.appendChild(createResult(value.display, value.copy));
 	const rest = line.slice(end);
-	if (rest.length > 0) row.createSpan({ text: rest });
+	if (rest.length > 0) el.appendText(rest);
 }
 
 // ponytail: whole-note rescan on each edit. Invalidate only the edited block if a large note stutters.
@@ -92,10 +86,8 @@ function buildDecorations(view: EditorView): DecorationSet {
 	const lines: string[] = [];
 	for (let n = 1; n <= doc.lines; n++) lines.push(doc.line(n).text);
 
-	const live = view.state.field(editorLivePreviewField, false) === true;
 	const builder = new RangeSetBuilder<Decoration>();
 	for (const span of valnoteSpans(lines)) {
-		if (live && !selectionInside(view.state, span)) continue;
 		const values = evaluateLines(lines.slice(span.start, span.end));
 		for (let i = 0; i < values.length; i++) {
 			const value = values[i];
@@ -124,21 +116,8 @@ export const valnoteExtension = ViewPlugin.fromClass(
 		}
 
 		update(update: ViewUpdate): void {
-			const live = update.state.field(editorLivePreviewField, false) === true;
-			const liveChanged =
-				live !== (update.startState.field(editorLivePreviewField, false) === true);
-			if (update.docChanged || liveChanged || (live && update.selectionSet)) {
-				this.decorations = buildDecorations(update.view);
-			}
+			if (update.docChanged) this.decorations = buildDecorations(update.view);
 		}
 	},
 	{ decorations: (plugin) => plugin.decorations },
 );
-
-function selectionInside(state: EditorState, span: LineSpan): boolean {
-	const doc = state.doc;
-	// span.start is the opener's 1-based line. span.end is the closer's 0-based index.
-	const from = doc.line(span.start).from;
-	const to = doc.line(span.end + 1).to;
-	return state.selection.ranges.some((range) => range.from <= to && range.to >= from);
-}

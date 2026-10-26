@@ -1,20 +1,18 @@
-.valnote-line {
-	font-family: var(--font-monospace);
-	white-space: pre-wrap;
-}
-
 .valnote-result-wrap {
 	display: inline;
+	font: inherit;
+	line-height: inherit;
 }
 
 .valnote-result {
-	display: inline-block;
+	display: inline;
 	margin-left: 1em;
 	padding: 0 0.35em;
-	border-radius: 2px;
+	border-radius: var(--radius-s);
 	background: #48b57e;
 	color: #fff;
-	line-height: 1.4;
+	font: inherit;
+	line-height: 1;
 	cursor: pointer;
 	user-select: none;
 	white-space: nowrap;
